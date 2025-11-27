@@ -32,9 +32,14 @@ public class WorkOrder {
 
     private String category;
 
+    // efter customer / category t.ex.
+    private String trainNumber;   // tågnummer
+    private String vehicle;       // fordon/vagn
+    private String location;      // plats/spår/verkstad
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private WorkOrderStatus status;
+    private WorkOrderStatus status = WorkOrderStatus.OPEN;  // Default-värde
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -44,8 +49,15 @@ public class WorkOrder {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = WorkOrderStatus.OPEN;
+        }
     }
 
     @PreUpdate

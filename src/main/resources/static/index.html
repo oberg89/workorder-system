@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Swedtrac Workorder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Swedtrac Workorder</h1>
+
+<!-- Flikar för navigation -->
+<nav class="tabs">
+    <button class="tab-button active" data-tab="orders">Arbetsorder</button>
+    <button class="tab-button" data-tab="trains">Tåg i verkstad</button>
+    <button class="tab-button" data-tab="settings">Inställningar</button>
+</nav>
+
+<!-- Flik: Arbetsorder -->
+<div id="tab-orders" class="tab-content active">
+    <div class="layout">
+        <!-- Vänster: Lista över arbetsorder -->
+        <section>
+            <h2>Arbetsorder i systemet</h2>
+            <button id="reload">Ladda om</button>
+            <button id="clear-form">Ny arbetsorder</button>
+            <span id="list-message" class="error"></span>
+
+            <table id="orders-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ordernr</th>
+                    <th>Titel</th>
+                    <th>Kund</th>
+                    <th>Tåg</th>
+                    <th>Fordon</th>
+                    <th>Plats</th>
+                    <th>Kategori</th>
+                    <th>Status</th>
+                    <th>Skapad</th>
+                    <th>Åtgärder</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Fylls av script.js -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Höger: Formulär för skapa/redigera arbetsorder -->
+        <section>
+            <h2 id="form-title">Ny arbetsorder</h2>
+            <form id="create-form">
+                <!-- Dolt fält för att hålla koll på om vi redigerar befintlig order -->
+                <input type="hidden" id="currentId">
+
+                <label>
+                    Ordernummer
+                    <input type="text" id="orderNumber" required placeholder="t.ex. WO-1003">
+                </label>
+
+                <label>
+                    Titel
+                    <input type="text" id="title" required placeholder="t.ex. Byta kran">
+                </label>
+
+                <label>
+                    Kund
+                    <input type="text" id="customer" required placeholder="t.ex. Kalmar Fastigheter AB">
+                </label>
+
+                <label>
+                    Tågnummer
+                    <input type="text" id="trainNumber" placeholder="t.ex. 8252">
+                </label>
+
+                <label>
+                    Fordon / vagn
+                    <input type="text" id="vehicle" placeholder="t.ex. Rc6 1424">
+                </label>
+
+                <label>
+                    Plats / spår
+                    <input type="text" id="location" placeholder="t.ex. Verkstad Kalmar / Spår 3">
+                </label>
+
+                <label>
+                    Kategori
+                    <input type="text" id="category" placeholder="t.ex. VVS">
+                </label>
+
+                <label>
+                    Beskrivning
+                    <textarea id="description" placeholder="Beskrivning av jobbet"></textarea>
+                </label>
+
+                <button type="submit" id="save-button">Spara arbetsorder</button>
+            </form>
+            <div id="create-message"></div>
+        </section>
+    </div>
+</div>
+
+<!-- Flik: Tåg i verkstad (kommer senare) -->
+<div id="tab-trains" class="tab-content">
+    <h2>Tåg i verkstad</h2>
+    <p>Visar tåg med arbetsorder som är öppna eller pågående.</p>
+
+    <button id="reload-trains">Ladda om</button>
+    <span id="trains-message" class="error"></span>
+
+    <table id="trains-table">
+        <thead>
+        <tr>
+            <th>Tåg</th>
+            <th>Fordon</th>
+            <th>Plats</th>
+            <th>Ordernr</th>
+            <th>Titel</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Fylls av script.js -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Flik: Inställningar (kommer senare) -->
+<div id="tab-settings" class="tab-content">
+    <h2>Inställningar</h2>
+    <p>Plats för t.ex. användare, roller, testdata m.m. (att göra).</p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

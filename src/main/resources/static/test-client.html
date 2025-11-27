@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Swedtrac Workorder – Testklient</title>
+</head>
+<body>
+<h1>Swedtrac Workorder – Testklient</h1>
+
+<h2>Skapa arbetsorder</h2>
+<form id="create-form">
+    <label>
+        Ordernummer:
+        <input type="text" id="orderNumber" value="WO-1001">
+    </label>
+    <br>
+    <label>
+        Titel:
+        <input type="text" id="title" value="Byta kran">
+    </label>
+    <br>
+    <label>
+        Kund:
+        <input type="text" id="customer" value="Kalmar Fastigheter AB">
+    </label>
+    <br>
+    <label>
+        Kategori:
+        <input type="text" id="category" value="VVS">
+    </label>
+    <br>
+    <label>
+        Beskrivning:
+        <textarea id="description">Kökskran läcker</textarea>
+    </label>
+    <br>
+    <button type="submit">Skapa</button>
+</form>
+
+<pre id="create-result"></pre>
+
+<hr>
+
+<h2>Lista alla arbetsorder</h2>
+<button id="load-orders">Ladda arbetsorder</button>
+<pre id="orders-list"></pre>
+
+<script>
+    const apiBase = '/api/workorders';
+
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const payload = {
+            orderNumber: document.getElementById('orderNumber').value,
+            title: document.getElementById('title').value,
+            customer: document.getElementById('customer').value,
+            category: document.getElementById('category').value,
+            description: document.getElementById('description').value
+        };
+
+        try {
+            const response = await fetch(apiBase, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const text = await response.text();
+            document.getElementById('create-result').textContent =
+                'Status: ' + response.status + '\n\n' + text;
+        } catch (err) {
+            document.getElementById('create-result').textContent = 'Fel: ' + err;
+        }
+    });
+
+    document.getElementById('load-orders').addEventListener('click', async () => {
+        try {
+            const response = await fetch(apiBase);
+            const text = await response.text();
+            document.getElementById('orders-list').textContent =
+                'Status: ' + response.status + '\n\n' + text;
+        } catch (err) {
+            document.getElementById('orders-list').textContent = 'Fel: ' + err;
+        }
+    });
+</script>
+</body>
+</html>
