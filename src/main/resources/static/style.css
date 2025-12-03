@@ -1,159 +1,425 @@
+/* ================================
+   Grundlayout
+   ================================ */
+
 body {
-    font-family: system-ui, sans-serif;
-    margin: 20px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f3f4f6;
+    color: #111827;
 }
 
 h1 {
-    margin-bottom: 0.2rem;
+    margin: 0;
+    padding: 16px 24px;
+    background-color: #111827;
+    color: #f9fafb;
+    font-size: 20px;
 }
 
-/* ========================================
-   TABS (flikar)
-   ======================================== */
+h2 {
+    font-size: 18px;
+    margin: 16px 0 8px 0;
+}
+
+h3 {
+    font-size: 16px;
+    margin: 12px 0 8px 0;
+}
+
+/* Wrapper för sidinnehåll (under rubriken) */
+body > h1 + * {
+    padding: 16px 24px 24px 24px;
+}
+
+/* ================================
+   Flikar
+   ================================ */
 
 .tabs {
-    margin-bottom: 10px;
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #d1d5db;
 }
 
 .tab-button {
-    border: 1px solid #ccc;
-    border-bottom: none;
-    padding: 6px 12px;
-    background: #f5f5f5;
+    border: none;
+    background: none;
+    padding: 8px 14px;
     cursor: pointer;
-    margin-right: 4px;
+    font-size: 14px;
+    border-radius: 6px 6px 0 0;
+    color: #374151;
 }
 
 .tab-button.active {
-    background: #ffffff;
-    font-weight: bold;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-bottom-color: #ffffff;
+    color: #111827;
+    font-weight: 600;
 }
 
 .tab-content {
-    border: 1px solid #ccc;
-    padding: 10px;
     display: none;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    padding: 16px;
+    border-radius: 0 6px 6px 6px;
 }
 
 .tab-content.active {
     display: block;
 }
 
-/* ========================================
-   LAYOUT OCH TABELL
-   ======================================== */
-
+/* ================================
+   Layout för Arbetsordrar (ändrad)
+   ================================ */
+/* Tidigare grid med höger-formulär — nu en kolumn (tabellen får hela utrymmet). */
 .layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-table {
-    border-collapse: collapse;
+    display: block;
     width: 100%;
-    margin-top: 1rem;
 }
 
+/* Ge sektionerna lite intern padding så tabellen inte klistrar sig mot kanten */
+.layout > section {
+    padding: 0 6px;
+}
+
+/* Bevara mobil-brytpunkt för andra element */
+@media (max-width: 1000px) {
+    .layout {
+        display: block;
+    }
+}
+
+/* ================================
+   Tabell
+   ================================ */
+
+/* Tabeller tar nu alltid 100% av sin container */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* Se till att tabellkollapsning inte bryter layouten */
 th, td {
-    border: 1px solid #ddd;
+    border: 1px solid #e5e7eb;
     padding: 6px 8px;
-    font-size: 0.9rem;
-}
-
-th {
-    background-color: #f5f5f5;
     text-align: left;
 }
 
-/* Klickbara rader */
-#orders-table tbody tr {
-    cursor: pointer;
+th {
+    background-color: #f9fafb;
+    font-weight: 600;
 }
 
-#orders-table tbody tr:hover {
-    background-color: #f0f8ff;
+tbody tr:nth-child(even) {
+    background-color: #f9fafb;
 }
 
-.actions button {
-    margin-right: 4px;
-    margin-bottom: 2px;
-    font-size: 0.75rem;
+/* På små skärmar: låt tabellen scrolla horisontellt i sin sektion */
+@media (max-width: 900px) {
+    /* gör tabellen scrollbar horisontellt utan att bryta layouten */
+    .layout > section {
+        overflow-x: auto;
+    }
+
+    .layout > section table {
+        min-width: 900px; /* välj en rimlig min-bredd eller justera efter behov */
+    }
 }
-#trains-table tbody tr:hover {
-    background-color: #f0f8ff;
+
+/* Om du vill att tabellen aldrig ska ha en min-bredd, ta bort min-width ovan.
+   Alternativt kan du justera min-width till t.ex. 720px beroende på data. */
+
+/* ================================
+   Formulär
+   ================================ */
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
-#trains-table tbody tr:hover {
-    background-color: #f0f8ff;
-}
-/* ========================================
-   FORMULÄR
-   ======================================== */
 
 label {
-    display: block;
-    margin-top: 6px;
-    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    color: #374151;
 }
 
-input, textarea, select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 4px;
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    padding: 6px 8px;
+    font-size: 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
     margin-top: 2px;
-    font-size: 0.9rem;
+    background-color: #f9fafb;
 }
 
 textarea {
+    min-height: 80px;
     resize: vertical;
-    min-height: 60px;
 }
 
-/* ========================================
-   STATUS-CHIPPAR
-   ======================================== */
-
-.status-badge {
-    padding: 2px 6px;
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
     border-radius: 4px;
-    font-size: 0.8rem;
-    color: #fff;
+    border: 1px solid #d1d5db;
+    background-color: #e5e7eb;
+    cursor: pointer;
+    color: #111827;
 }
 
-.status-OPEN {
-    background-color: #007bff;
+button:hover {
+    background-color: #d1d5db;
 }
 
-.status-IN_PROGRESS {
-    background-color: #ffc107;
-    color: #000;
+button#save-button,
+#save-detail {
+    background-color: #16a34a;
+    color: white;
+    border-color: #15803d;
 }
 
-.status-COMPLETED {
-    background-color: #28a745;
+button#save-button:hover,
+#save-detail:hover {
+    background-color: #15803d;
 }
 
-.status-INVOICED {
-    background-color: #6f42c1;
-}
-
-.status-CANCELLED {
-    background-color: #dc3545;
-}
-
-/* ========================================
-   MEDDELANDEN
-   ======================================== */
+/* ================================
+   Meddelanden
+   ================================ */
 
 .error {
-    color: #dc3545;
-    font-size: 0.85rem;
+    color: #b91c1c;
+    font-size: 12px;
     margin-left: 8px;
 }
 
-.success {
-    color: #28a745;
-    font-size: 0.85rem;
+#list-message,
+#create-message,
+#detail-message {
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+/* ================================
+   Status-badges
+   ================================ */
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.status-OPEN {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-IN_PROGRESS {
+    background-color: #fef3c7;
+    color: #c2410c;
+}
+
+.status-COMPLETED {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.status-READY_FOR_INVOICING {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-INVOICED {
+    background-color: #ede9fe;
+    color: #5b21b6;
+}
+
+.status-CANCELLED {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+/* ================================
+   Vyväljare
+   ================================ */
+
+.view-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+/* ================================
+   Tåg i verkstad
+   ================================ */
+
+.train-location-block {
+    margin-top: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: #ffffff;
+    overflow: hidden;
+    width: 100%;
+}
+
+.train-location-title {
+    background-color: #f3f4f6;
+    padding: 6px 10px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* Se till att tabeller i depå-blocken också fyller bredden */
+.train-location-block table {
+    width: 100%;
+}
+
+/* ================================
+   Detaljvy - Redigera arbetsorder
+   ================================ */
+
+.order-detail-view {
+    position: fixed;
+    inset: 40px 40px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px;
+    z-index: 1000;
+}
+
+@media (max-width: 900px) {
+    .order-detail-view {
+        inset: 20px 8px;
+        padding: 12px;
+    }
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.detail-header h2 {
+    margin: 0;
+}
+
+.detail-header button {
+    background-color: #e5e7eb;
+}
+
+.order-info-box {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background-color: #f9fafb;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.order-info-box .info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.order-info-box .info-row span {
+    min-width: 160px;
+}
+
+/* Inre sektioner i detaljvy */
+
+.detail-section {
+    margin-top: 8px;
+}
+
+.detail-section h3 {
+    margin-bottom: 4px;
+}
+
+.detail-section button {
+    margin-bottom: 6px;
+}
+
+/* Footer under tabellerna i detaljvy */
+
+.table-footer {
+    text-align: right;
+    font-size: 13px;
     margin-top: 4px;
+}
+
+/* Total längst ner */
+
+.grand-total {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+/* Åtgärdsknappar under detaljvy */
+
+.detail-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* Inputs i detaljtabellerna (tid/material) */
+
+#time-table input,
+#material-table input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    font-size: 12px;
+}
+
+/* Se till att innehållet kan scrollas om det blir mycket */
+
+.order-detail-view {
+    overflow: hidden;
+}
+
+.order-detail-view > *:not(.detail-header) {
+    overflow-y: auto;
+}
+
+/* Men det här gör att själva sektionerna får scroll om det behövs */
+.order-detail-view .detail-section,
+.order-detail-view .order-info-box,
+.order-detail-view .grand-total,
+.order-detail-view .detail-actions {
+    overflow: visible;
 }

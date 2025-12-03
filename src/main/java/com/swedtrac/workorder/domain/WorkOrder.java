@@ -32,20 +32,26 @@ public class WorkOrder {
 
     private String category;
 
-    // efter customer / category t.ex.
+    // Tåg- och platsinfo
     private String trainNumber;   // tågnummer
     private String vehicle;       // fordon/vagn
-    private String location;      // plats/spår/verkstad
+    private String location;      // plats/verkstad
+    private String track;         // spår
 
+    // Status
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private WorkOrderStatus status = WorkOrderStatus.OPEN;  // Default-värde
+    private WorkOrderStatus status = WorkOrderStatus.OPEN;
 
+    // Tidsstämplar
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    // Arkivering (null = inte arkiverad)
+    private LocalDateTime archivedAt;
 
     @PrePersist
     protected void onCreate() {

@@ -1,155 +1,174 @@
-package com.swedtrac.workorder.controller;
+package com.swedtrac.workorder.web;
 
 import com.swedtrac.workorder.domain.WorkOrder;
 import com.swedtrac.workorder.domain.WorkOrderStatus;
 import com.swedtrac.workorder.repository.WorkOrderRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/workorders")
+@CrossOrigin(origins = "*") // tillåter frontend (kan låsas ned senare)
 public class WorkOrderController {
 
-    private final WorkOrderRepository repository;
+    private final WorkOrderRepository workOrderRepository;
 
-    public WorkOrderController(WorkOrderRepository repository) {
-        this.repository = repository;
+    public WorkOrderController(WorkOrderRepository workOrderRepository) {
+        this.workOrderRepository = workOrderRepository;
     }
 
-    /**
-     * GET /api/workorders
-     * Hämtar alla arbetsorder.
-     */
+    // ================================
+    // GET /api/workorders
+    // ================================
     @GetMapping
-    public List<WorkOrder> getAll() {
-        return repository.findAll();
+    public List<WorkOrder> getAllWorkOrders() {
+        return workOrderRepository.findAll();
     }
 
-    /**
-     * GET /api/workorders/{id}
-     * Hämtar en specifik arbetsorder.
-     */
+    // ================================
+    // GET /api/workorders/{id}
+    // ================================
     @GetMapping("/{id}")
-    public WorkOrder getById(@PathVariable Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Arbetsorder med id " + id + " hittades inte"
-                ));
+    public ResponseEntity<WorkOrder> getWorkOrderById(@PathVariable Long id) {
+        Optional<WorkOrder> optional = workOrderRepository.findById(id);
+        return optional
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * POST /api/workorders
-     * Skapar en ny arbetsorder.
-     */
+    // ================================
+    // POST /api/workorders
+    // Skapa ny arbetsorder
+    // ================================
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public WorkOrder create(@RequestBody WorkOrder workOrder) {
-        // Validering
+    public ResponseEntity<?> createWorkOrder(@RequestBody WorkOrder workOrder) {
+        // Enkel validering
         if (workOrder.getOrderNumber() == null || workOrder.getOrderNumber().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ordernummer får inte vara tomt");
+            return ResponseEntity.badRequest().body("orderNumber är obligatoriskt");
         }
         if (workOrder.getTitle() == null || workOrder.getTitle().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Titel får inte vara tom");
+            return ResponseEntity.badRequest().body("title är obligatoriskt");
         }
         if (workOrder.getCustomer() == null || workOrder.getCustomer().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kund får inte vara tom");
+            return ResponseEntity.badRequest().body("customer är obligatoriskt");
         }
 
-        // Sätt created_at om den är null
-        if (workOrder.getCreatedAt() == null) {
-            workOrder.setCreatedAt(LocalDateTime.now());
-        }
-
-        // Sätt default status om den är null
+        // Nya ordrar ska alltid starta som OPEN om inget annat anges
         if (workOrder.getStatus() == null) {
             workOrder.setStatus(WorkOrderStatus.OPEN);
         }
 
-        // Sätt updated_at om du har ett sådant fält
-        try {
-            workOrder.setUpdatedAt(LocalDateTime.now());
-        } catch (NoSuchMethodError | RuntimeException ignored) {
-            // om du inte har fältet/lösningen än, ignorerar vi bara
+        // Skapa tidsstämplar om de saknas
+        LocalDateTime now = LocalDateTime.now();
+        if (workOrder.getCreatedAt() == null) {
+            workOrder.setCreatedAt(now);
         }
+        workOrder.setUpdatedAt(now);
 
-        return repository.save(workOrder);
+        // archivedAt ska vara null på nya ordrar
+        workOrder.setArchivedAt(null);
+
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    /**
-     * PUT /api/workorders/{id}
-     * Uppdaterar en befintlig arbetsorder (alla huvudfält).
-     * Används av GUI:t när du redigerar en befintlig order.
-     */
+    // ================================
+    // PUT /api/workorders/{id}
+    // Uppdatera befintlig arbetsorder (ej status/arkiv)
+    // ================================
     @PutMapping("/{id}")
-    public WorkOrder update(@PathVariable Long id, @RequestBody WorkOrder updated) {
-        WorkOrder existing = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Arbetsorder med id " + id + " hittades inte"
-                ));
+    public ResponseEntity<?> updateWorkOrder(
+            @PathVariable Long id,
+            @RequestBody WorkOrder updated
+    ) {
+        Optional<WorkOrder> optional = workOrderRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
 
-        // Uppdatera fält – samma som i formuläret
+        WorkOrder existing = optional.get();
+
+        // Uppdatera fält som ska gå att ändra från formuläret
         existing.setOrderNumber(updated.getOrderNumber());
         existing.setTitle(updated.getTitle());
+        existing.setDescription(updated.getDescription());
         existing.setCustomer(updated.getCustomer());
         existing.setCategory(updated.getCategory());
-        existing.setDescription(updated.getDescription());
         existing.setTrainNumber(updated.getTrainNumber());
         existing.setVehicle(updated.getVehicle());
         existing.setLocation(updated.getLocation());
+        existing.setTrack(updated.getTrack());
 
-        // Rör inte status här – den hanteras i PATCH /{id}/status
-        // Uppdatera updatedAt om du har det fältet
-        try {
-            existing.setUpdatedAt(LocalDateTime.now());
-        } catch (NoSuchMethodError | RuntimeException ignored) {
-        }
+        // Vi ändrar inte createdAt
+        existing.setUpdatedAt(LocalDateTime.now());
 
-        return repository.save(existing);
+        // Vi låter status / archivedAt INTE påverkas av detta PUT
+        // (de styrs via egen endpoint nedan)
+
+        WorkOrder saved = workOrderRepository.save(existing);
+        return ResponseEntity.ok(saved);
     }
 
-    /**
-     * PATCH /api/workorders/{id}/status
-     * Uppdaterar endast status på en arbetsorder.
-     * Används av status-knapparna i GUI:t.
-     */
+    // ================================
+    // PATCH /api/workorders/{id}/status?status=IN_PROGRESS
+    // Uppdatera status + hantera arkivering
+    // ================================
     @PatchMapping("/{id}/status")
-    public WorkOrder updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        WorkOrder workOrder = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Arbetsorder med id " + id + " hittades inte"
-                ));
-
-        String statusStr = body.get("status");
-        if (statusStr == null || statusStr.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status får inte vara tom");
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestParam("status") WorkOrderStatus newStatus
+    ) {
+        Optional<WorkOrder> optional = workOrderRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
 
-        WorkOrderStatus newStatus;
-        try {
-            newStatus = WorkOrderStatus.valueOf(statusStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Ogiltig status: " + statusStr + ". Giltiga värden: OPEN, IN_PROGRESS, COMPLETED, INVOICED, CANCELLED"
-            );
-        }
+        WorkOrder workOrder = optional.get();
 
+        // Sätt ny status
         workOrder.setStatus(newStatus);
+        workOrder.setUpdatedAt(LocalDateTime.now());
 
-        // Uppdatera updatedAt om fältet finns
-        try {
-            workOrder.setUpdatedAt(LocalDateTime.now());
-        } catch (NoSuchMethodError | RuntimeException ignored) {
+        // Hantera arkivering
+        if (newStatus == WorkOrderStatus.CANCELLED) {
+            // Avbrutna ordrar markeras som arkiverade direkt
+            workOrder.setArchivedAt(LocalDateTime.now());
+        } else if (newStatus == WorkOrderStatus.COMPLETED ||
+                newStatus == WorkOrderStatus.READY_FOR_INVOICING ||
+                newStatus == WorkOrderStatus.INVOICED) {
+            // Här kan vi välja att INTE arkivera automatiskt
+            // utan bara lämna archivedAt som den är
+            // (t.ex. arkiveras man manuellt senare).
+        } else {
+            // OPEN eller IN_PROGRESS -> inte arkiverad
+            workOrder.setArchivedAt(null);
         }
 
-        return repository.save(workOrder);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        return ResponseEntity.ok(saved);
+    }
+
+    // ================================
+    // PATCH /api/workorders/{id}/archive
+    // Manuell arkivering (t.ex. från frontend senare)
+    // ================================
+    @PatchMapping("/{id}/archive")
+    public ResponseEntity<?> archiveWorkOrder(@PathVariable Long id) {
+        Optional<WorkOrder> optional = workOrderRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        WorkOrder workOrder = optional.get();
+        workOrder.setArchivedAt(LocalDateTime.now());
+        workOrder.setUpdatedAt(LocalDateTime.now());
+
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        return ResponseEntity.ok(saved);
     }
 }
