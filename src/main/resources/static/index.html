@@ -10,19 +10,43 @@
 
 <!-- Flikar för navigation -->
 <nav class="tabs">
-    <button class="tab-button active" data-tab="orders">Arbetsorder</button>
     <button class="tab-button" data-tab="trains">Tåg i verkstad</button>
+    <button class="tab-button active" data-tab="orders">Arbetsordrar</button>
     <button class="tab-button" data-tab="settings">Inställningar</button>
 </nav>
 
-<!-- Flik: Arbetsorder -->
+<!-- Flik: Tåg i verkstad -->
+<div id="tab-trains" class="tab-content">
+    <h2>Tåg i verkstad</h2>
+    <p>Visar tåg med arbetsorder som är öppna eller pågående, grupperade per depå/plats.</p>
+
+    <button id="reload-trains">Ladda om</button>
+    <span id="trains-message" class="error"></span>
+
+    <div id="trains-container">
+        <!-- Fylls av script.js med sektioner per depå -->
+    </div>
+</div>
+
+<!-- Flik: Arbetsordrar -->
 <div id="tab-orders" class="tab-content active">
+    <div class="view-selector">
+        <label for="order-view">Visa:</label>
+        <select id="order-view">
+            <option value="active">Aktiva</option>
+            <option value="done">Klara</option>
+            <option value="finance">Ekonomi</option>
+            <option value="archive">Arkiv</option>
+        </select>
+    </div>
+
     <div class="layout">
         <!-- Vänster: Lista över arbetsorder -->
         <section>
-            <h2>Arbetsorder i systemet</h2>
+            <h2 id="orders-list-title">Aktiva arbetsorder</h2>
             <button id="reload">Ladda om</button>
-            <button id="clear-form">Ny arbetsorder</button>
+            <!-- Knappen finns i alla vyer inom Arbetsordrar -->
+            <button id="new-order-button">Ny arbetsorder</button>
             <span id="list-message" class="error"></span>
 
             <table id="orders-table">
@@ -35,6 +59,7 @@
                     <th>Tåg</th>
                     <th>Fordon</th>
                     <th>Plats</th>
+                    <th>Spår</th>
                     <th>Kategori</th>
                     <th>Status</th>
                     <th>Skapad</th>
@@ -47,89 +72,158 @@
             </table>
         </section>
 
-        <!-- Höger: Formulär för skapa/redigera arbetsorder -->
-        <section>
-            <h2 id="form-title">Ny arbetsorder</h2>
-            <form id="create-form">
-                <!-- Dolt fält för att hålla koll på om vi redigerar befintlig order -->
-                <input type="hidden" id="currentId">
-
-                <label>
-                    Ordernummer
-                    <input type="text" id="orderNumber" required placeholder="t.ex. WO-1003">
-                </label>
-
-                <label>
-                    Titel
-                    <input type="text" id="title" required placeholder="t.ex. Byta kran">
-                </label>
-
-                <label>
-                    Kund
-                    <input type="text" id="customer" required placeholder="t.ex. Kalmar Fastigheter AB">
-                </label>
-
-                <label>
-                    Tågnummer
-                    <input type="text" id="trainNumber" placeholder="t.ex. 8252">
-                </label>
-
-                <label>
-                    Fordon / vagn
-                    <input type="text" id="vehicle" placeholder="t.ex. Rc6 1424">
-                </label>
-
-                <label>
-                    Plats / spår
-                    <input type="text" id="location" placeholder="t.ex. Verkstad Kalmar / Spår 3">
-                </label>
-
-                <label>
-                    Kategori
-                    <input type="text" id="category" placeholder="t.ex. VVS">
-                </label>
-
-                <label>
-                    Beskrivning
-                    <textarea id="description" placeholder="Beskrivning av jobbet"></textarea>
-                </label>
-
-                <button type="submit" id="save-button">Spara arbetsorder</button>
-            </form>
-            <div id="create-message"></div>
-        </section>
+        <!-- Högerkolumnen tas bort helt enligt önskemål -->
     </div>
-</div>
-
-<!-- Flik: Tåg i verkstad (kommer senare) -->
-<div id="tab-trains" class="tab-content">
-    <h2>Tåg i verkstad</h2>
-    <p>Visar tåg med arbetsorder som är öppna eller pågående.</p>
-
-    <button id="reload-trains">Ladda om</button>
-    <span id="trains-message" class="error"></span>
-
-    <table id="trains-table">
-        <thead>
-        <tr>
-            <th>Tåg</th>
-            <th>Fordon</th>
-            <th>Plats</th>
-            <th>Ordernr</th>
-            <th>Titel</th>
-            <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- Fylls av script.js -->
-        </tbody>
-    </table>
 </div>
 
 <!-- Flik: Inställningar (kommer senare) -->
 <div id="tab-settings" class="tab-content">
     <h2>Inställningar</h2>
     <p>Plats för t.ex. användare, roller, testdata m.m. (att göra).</p>
+</div>
+
+<!-- Detaljvy - Redigera arbetsorder (overlay för tid/material) -->
+<div id="order-detail-view" class="order-detail-view" style="display: none;">
+    <div class="detail-header">
+        <h2>Redigera arbetsorder</h2>
+        <button id="close-detail">Stäng</button>
+    </div>
+
+    <!-- Orderinfo överst (readonly) -->
+    <div class="order-info-box">
+        <div class="info-row">
+            <span><strong>Ordernr:</strong> <span id="detail-orderNumber"></span></span>
+            <span><strong>Kund:</strong> <span id="detail-customer"></span></span>
+            <span><strong>Datum:</strong> <span id="detail-createdAt"></span></span>
+        </div>
+        <div class="info-row">
+            <span><strong>Tåg:</strong> <span id="detail-trainNumber"></span></span>
+            <span><strong>Fordon:</strong> <span id="detail-vehicle"></span></span>
+            <span><strong>Plats:</strong> <span id="detail-location"></span></span>
+            <span><strong>Spår:</strong> <span id="detail-track"></span></span>
+        </div>
+        <div class="info-row">
+            <span><strong>Titel:</strong> <span id="detail-title"></span></span>
+        </div>
+        <div class="info-row">
+            <span><strong>Beskrivning:</strong> <span id="detail-description"></span></span>
+        </div>
+    </div>
+
+    <!-- Arbetstid -->
+    <section class="detail-section">
+        <h3>Arbetstid</h3>
+        <button id="add-time-row">+ Lägg till rad</button>
+        <table id="time-table">
+            <thead>
+            <tr>
+                <th>Åtgärd</th>
+                <th>Utfört arbete</th>
+                <th>Tid (h)</th>
+                <th>á kr</th>
+                <th>Summa</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Fylls dynamiskt -->
+            </tbody>
+        </table>
+        <div class="table-footer">
+            <strong>Summa arbetstid:</strong> <span id="time-total">0 kr</span>
+        </div>
+    </section>
+
+    <!-- Material -->
+    <section class="detail-section">
+        <h3>Material</h3>
+        <button id="add-material-row">+ Lägg till rad</button>
+        <table id="material-table">
+            <thead>
+            <tr>
+                <th>Artikelnummer</th>
+                <th>Material</th>
+                <th>Antal</th>
+                <th>Enh.</th>
+                <th>á kr</th>
+                <th>Summa</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Fylls dynamiskt -->
+            </tbody>
+        </table>
+        <div class="table-footer">
+            <strong>Summa material:</strong> <span id="material-total">0 kr</span>
+        </div>
+    </section>
+
+    <!-- Total -->
+    <div class="grand-total">
+        <strong>Summa totalt:</strong> <span id="grand-total">0 kr</span>
+    </div>
+
+    <!-- Spara-knapp -->
+    <div class="detail-actions">
+        <button id="save-detail">Spara ändringar</button>
+        <span id="detail-message"></span>
+    </div>
+</div>
+
+<!-- Modal för att skapa / redigera arbetsorder -->
+<div id="create-order-modal" class="order-detail-view" style="display:none;">
+    <div class="detail-header">
+        <h2 id="create-modal-title">Ny arbetsorder</h2>
+        <button id="close-create-modal">Stäng</button>
+    </div>
+
+    <form id="create-modal-form">
+        <input type="hidden" id="createModal-id">
+
+        <label>
+            Ordernummer
+            <input type="text" id="createModal-orderNumber" required placeholder="t.ex. WO-1003">
+        </label>
+        <label>
+            Titel
+            <input type="text" id="createModal-title" required placeholder="t.ex. Byta kran">
+        </label>
+        <label>
+            Kund
+            <input type="text" id="createModal-customer" required placeholder="t.ex. Kalmar Fastigheter AB">
+        </label>
+        <label>
+            Tågnummer
+            <input type="text" id="createModal-trainNumber" placeholder="t.ex. 8252">
+        </label>
+        <label>
+            Fordon / vagn
+            <input type="text" id="createModal-vehicle" placeholder="t.ex. Rc6 1424">
+        </label>
+        <label>
+            Plats
+            <input type="text" id="createModal-location" placeholder="t.ex. Verkstad Kalmar">
+        </label>
+        <label>
+            Spår
+            <input type="text" id="createModal-track" placeholder="t.ex. spår 4">
+        </label>
+        <label>
+            Kategori
+            <input type="text" id="createModal-category" placeholder="t.ex. VVS">
+        </label>
+        <label>
+            Beskrivning
+            <textarea id="createModal-description" placeholder="Beskrivning av jobbet"></textarea>
+        </label>
+
+        <div class="detail-actions">
+            <button type="submit" id="create-modal-save">Spara</button>
+            <button type="button" id="create-modal-cancel">Avbryt</button>
+            <span id="create-modal-message"></span>
+        </div>
+    </form>
 </div>
 
 <script src="script.js"></script>
